@@ -121,4 +121,12 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     public function setAttributes()
     {
     }
+
+    protected function responseParser(SimpleXMLElement $xml)
+    {
+        if (isset($xml->CreateTopicResult)) {
+            return (string) $xml->CreateTopicResult->TopicArn;
+        }
+        throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
+    }
 }

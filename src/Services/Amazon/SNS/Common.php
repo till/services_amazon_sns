@@ -207,6 +207,17 @@ abstract class Services_Amazon_SNS_Common
         if (substr($response->getStatus(), 0, 2) != '20') {
             throw new Services_Amazon_SNS_Exception($this->parseErrorResponse($response->getBody()));
         }
-        var_dump($response);
+        $xml = new SimpleXMLElement($response->getBody());
+        return $this->responseParser($xml);
     }
+
+    /**
+     * Request response parsing is to be done in the actual implementation.
+     *
+     * @param SimpleXMLElement $xml
+     *
+     * @return void
+     * @see    self::parseRequest()
+     */
+    abstract protected function responseParser(SimpleXMLElement $xml);
 }
