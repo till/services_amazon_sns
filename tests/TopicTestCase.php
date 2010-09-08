@@ -37,6 +37,8 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
 
     public function testDelete()
     {
+        $topicArn = $this->instance->topics->add('foo');
+        $this->assertEquals(true, $this->instance->topics->delete($topicArn));
     }
 
     public function testGet()
