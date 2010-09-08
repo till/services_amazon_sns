@@ -43,5 +43,14 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
 
     public function testGet()
     {
+        $this->instance->topics->add('foo');
+        $this->instance->topics->add('bar');
+
+        $topics = $this->instance->topics->get();
+        $this->assertEquals(2, count($topics));
+
+        foreach ($topics as $topic) {
+            $this->assertTrue($this->instance->topics->delete($topic));
+        }
     }
 }
