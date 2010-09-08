@@ -148,4 +148,21 @@ class TopicTestCase extends AbstractTestCase
 
         $this->instance->topics->delete($topicArn);
     }
+
+    public function testPermissions()
+    {
+        $this->fail('To be implemented.');
+
+        $label = 'ServicesAmazonSNSPermTest';
+
+        $this->instance->getPermissions($topicArn);
+
+        $this->instance->addPermission(
+            $topicArn,
+            $label,
+            array('aws' => 'action', 'aws2' => 'action')
+        );
+
+        $this->instance->deletePermission($topicArn, $label);
+    }
 }
