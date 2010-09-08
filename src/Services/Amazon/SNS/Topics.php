@@ -60,6 +60,9 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     );
 
     /**
+     * When you already created a topic, the API will return the ARN of the already
+     * created one. Otherwise, this works as expected.
+     *
      * <code>
      * http://sns.us-east-1.amazonaws.com/
      * ?Name=My-Topic
@@ -69,6 +72,11 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
      * &Timestamp=2010-03-31T12%3A00%3A00.000Z
      * &AWSAccessKeyId=(AWS Access Key ID)
      * &Signature=gfzIF53exFVdpSNb8AiwN3Lv%2FNYXh6S%2Br3yySK70oX4%3D
+     * </code>
+     *
+     * @param string $name The name of the topic.
+     *
+     * @return string The topic's ARN.
      */
     public function add($name)
     {
@@ -79,6 +87,8 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     }
 
     /**
+     * Give other AWS accounts permissions to add public, etc. to a topic.
+     *
      * <code>
      * http://sns.us-east-1.amazonaws.com/
      * ?TopicArn=arn%3Aaws%3Asns%3Aus-east-1%3A123456789012%3AMy-Test
@@ -115,7 +125,7 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     }
 
     /**
-     * List.
+     * ListTopics.
      *
      * @return array
      */
@@ -127,8 +137,14 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         return $this->parseResponse($response);
     }
 
-    public function getAttributes()
+    public function getAttributes($arn)
     {
+        $requestUrl = $this->createRequest(
+            array('Action' => 'GetTopicAttributes', 'TopicArn' => $arn)
+        );
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
     }
 
     public function setAttributes()
@@ -158,7 +174,14 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
             }
             return $topics;
         }
-        // var_dump($xml->ListTopicsResult->Topics);
+        if (isset($xml->GetTopicAttributesResult)) {
+            $attributes = array();
+            foreach ($xml->GetTopicAttributesResult->Attributes->entry as $entry) {
+                $attributes[(string) $entry->key] = (string) $entry->value;
+            }
+            return $attributes;
+        }
+        //var_dump($xml);
         throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
     }
 }
