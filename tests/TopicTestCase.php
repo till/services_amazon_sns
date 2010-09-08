@@ -53,4 +53,14 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
             $this->assertTrue($this->instance->topics->delete($topic));
         }
     }
+
+    public function testGetAttributes()
+    {
+        $topicArn = $this->instance->topics->add('foobar');
+
+        $attributes = $this->instance->topics->getAttributes($topicArn);
+        var_dump($attributes);
+
+        $this->instance->topics->delete($topicArn);
+    }
 }
