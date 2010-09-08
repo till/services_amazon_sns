@@ -124,4 +124,28 @@ class TopicTestCase extends AbstractTestCase
 
         $this->instance->topics->delete($topicArn);
     }
+
+    /**
+     * Set an attribute.
+     *
+     * @return void
+     */
+    public function testSetAttribute()
+    {
+        $topicArn = $this->instance->topics->add("{$this->topicPrefix}fubar");
+
+        $displayName = 'FUBAR';
+
+        $this->assertTrue($this->instance->topics->setAttribute(
+            $topicArn,
+            'DisplayName',
+            $displayName
+        ));
+
+        $attributes = $this->instance->topics->getAttributes($topicArn);
+
+        $this->assertEquals($displayName, $attributes['DisplayName']);
+
+        $this->instance->topics->delete($topicArn);
+    }
 }
