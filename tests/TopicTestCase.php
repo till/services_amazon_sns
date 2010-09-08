@@ -28,8 +28,11 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
 
     public function testCreate()
     {
-        $topics = $this->instance->topics;
-        $topics->add('foo');
+        $topics   = $this->instance->topics;
+        $topicArn = $topics->add('foo');
+        $this->assertNotEquals('', $topicArn);
+        $this->assertContains(":foo", $topicArn);
+        $this->assertContains($this->instance->getZone(), $topicArn);
     }
 
     public function testDelete()
