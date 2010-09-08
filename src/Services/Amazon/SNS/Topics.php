@@ -159,6 +159,24 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     }
 
     /**
+     * This is a wrapper around getAttributes() and only returns 'Policy'.
+     * 'Policy' is decoded, and then the Statement array is returned.
+     *
+     * AWS SNS' API has no native 'GetPermission' call.
+     *
+     * @param string $arn The topic's ARN.
+     *
+     * @return array
+     */
+    public function getPermissions($arn)
+    {
+        $attributes = $this->getAttributes($arn);
+        $policy     = json_decode($attributes['Policy']);
+
+        return $policy->Statement;
+    }
+
+    /**
      * Set a topic's attribute.
      *
      * @param string $arn       The topic's ARN.
@@ -186,6 +204,21 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         $response = $this->makeRequest($requestUrl);
 
         return $this->parseResponse($response);
+    }
+
+    public function setPermission()
+    {
+        static $actions = array(
+            "SNS:GetTopicAttributes",
+            "SNS:SetTopicAttributes",
+            "SNS:AddPermission",
+            "SNS:RemovePermission",
+            "SNS:DeleteTopic",
+            "SNS:Subscribe",
+            "SNS:ListSubscriptionsByTopic",
+            "SNS:Publish",
+            "SNS:Receive",
+        );
     }
 
     /**
