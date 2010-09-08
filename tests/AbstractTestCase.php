@@ -69,7 +69,7 @@ abstract class AbstractTestCase extends PHPUnit_Framework_TestCase
     {
         $configFile = dirname(__FILE__) . '/test-config.php';
         if (!file_exists($configFile)) {
-            $this->fail('These tests require a test-config.php.');
+            $this->markTestSkipped('These tests require a test-config.php.');
         }
         $this->config = include $configFile;
 
