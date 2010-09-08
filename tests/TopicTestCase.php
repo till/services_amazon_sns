@@ -149,6 +149,11 @@ class TopicTestCase extends AbstractTestCase
         $this->instance->topics->delete($topicArn);
     }
 
+    /**
+     * Retrieve a topic's permissions.
+     *
+     * @return void
+     */
     public function testGetPermissions()
     {
         $topicArn = $this->instance->topics->add("{$this->topicPrefix}WADDAP");
