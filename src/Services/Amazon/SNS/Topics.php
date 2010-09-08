@@ -124,6 +124,10 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         return $this->parseResponse($response);
     }
 
+    public function deletePermission()
+    {
+    }
+
     /**
      * ListTopics.
      *
