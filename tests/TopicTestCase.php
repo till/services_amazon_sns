@@ -53,28 +53,9 @@
  * @version  Release: @package_version@
  * @link     http://github.com/till/services_amazon_sns
  */
-class TopicTestCase extends PHPUnit_Framework_TestCase
+class TopicTestCase extends AbstractTestCase
 {
-    /**
-     * @var array $config The config array.
-     */
-    protected $config;
-
     protected $topicPrefix = 'SASNS_';
-
-    public function setUp()
-    {
-        $configFile = dirname(__FILE__) . '/test-config.php';
-        if (!file_exists($configFile)) {
-            $this->fail('These tests require a test-config.php.');
-        }
-        $this->config = include $configFile;
-
-        $this->instance = new Services_Amazon_SNS(
-            $this->config['accessKeyId'],
-            $this->config['secretAccessKey']
-        );
-    }
 
     public function testSet()
     {
@@ -110,6 +91,8 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
     {
         $this->instance->topics->add("{$this->topicPrefix}foo");
         $this->instance->topics->add("{$this->topicPrefix}bar");
+
+        sleep(10);
 
         $topics = $this->instance->topics->get();
         $this->assertEquals(2, count($topics), "We were probably too fast. Re-run this test, please.");
