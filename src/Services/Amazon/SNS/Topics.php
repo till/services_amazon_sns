@@ -137,6 +137,13 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         return $this->parseResponse($response);
     }
 
+    /**
+     * Retrieve a topic's attributes.
+     *
+     * @param string $arn The topic's ARN.
+     *
+     * @return array
+     */
     public function getAttributes($arn)
     {
         $requestUrl = $this->createRequest(
@@ -147,8 +154,34 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         return $this->parseResponse($response);
     }
 
-    public function setAttributes()
+    /**
+     * Set a topic's attribute.
+     *
+     * @param string $arn       The topic's ARN.
+     * @param string $attribute The name of the attribute.
+     * @param mixed  $value     The value.
+     *
+     * @return boolean
+     * @throws Services_Amazon_SNS_Exception When $value is not a string, or similar.
+     */
+    public function setAttribute($arn, $attribute, $value)
     {
+        if (!is_string($value) && !is_numeric($value)) {
+            throw new Services_Amazon_SNS_Exception("Invalid argument.");
+        }
+
+        $requestUrl = $this->createRequest(
+            array(
+                'Action'         => 'SetTopicAttributes',
+                'TopicArn'       => $arn,
+                'AttributeValue' => $value,
+                'AttributeName'  => $attribute,
+            )
+        );
+
+        $response = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
     }
 
     /**
@@ -174,6 +207,9 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
             }
             return $topics;
         }
+        if ($xml->getName() == 'SetTopicAttributesResponse') {
+            return true;
+        }
         if (isset($xml->GetTopicAttributesResult)) {
             $attributes = array();
             foreach ($xml->GetTopicAttributesResult->Attributes->entry as $entry) {
@@ -181,7 +217,7 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
             }
             return $attributes;
         }
-        //var_dump($xml);
+        var_dump($xml, $xml->getName(), $xml->asXml());
         throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
     }
 }
