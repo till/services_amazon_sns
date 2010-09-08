@@ -100,11 +100,18 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     }
 
     /**
-     * Delete.
+     * Delete a topic.
+     *
+     * @param string $arn The topic's ARN.
+     *
+     * @return boolean
      */
-    public function delete($name)
+    public function delete($arn)
     {
-        $request;
+        $requestUrl = $this->createRequest(array('TopicArn' => $arn, 'Action' => 'DeleteTopic'));
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
     }
 
     /**
@@ -122,10 +129,21 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     {
     }
 
+    /**
+     * This is a parser for the successful response from the various actions.
+     *
+     * The chain is: {@link self::parseResponse()}, then here.
+     *
+     * @return mixed
+     * @throws Services_Amazon_SNS_Exception If we couldn't match anything.
+     */
     protected function responseParser(SimpleXMLElement $xml)
     {
         if (isset($xml->CreateTopicResult)) {
             return (string) $xml->CreateTopicResult->TopicArn;
+        }
+        if ($xml->getName() == 'DeleteTopicResponse') {
+            return true;
         }
         throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
     }
