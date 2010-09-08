@@ -116,9 +116,15 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
 
     /**
      * List.
+     *
+     * @return array
      */
     public function get()
     {
+        $requestUrl = $this->createRequest(array('Action' => 'ListTopics'));
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
     }
 
     public function getAttributes()
@@ -145,6 +151,14 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         if ($xml->getName() == 'DeleteTopicResponse') {
             return true;
         }
+        if (isset($xml->ListTopicsResult)) {
+            $topics = array();
+            foreach ($xml->ListTopicsResult->Topics->member as $member) {
+                $topics[] = (string) $member->TopicArn;
+            }
+            return $topics;
+        }
+        // var_dump($xml->ListTopicsResult->Topics);
         throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
     }
 }
