@@ -122,8 +122,6 @@ abstract class Services_Amazon_SNS_Common
     protected function createSignature(array $params)
     {
         unset($params['Signature']);
-        unset($params['SignatureVersion']);
-        unset($params['SignatureMethod']);
 
         try {
             // try first to use SHA-256
@@ -135,13 +133,18 @@ abstract class Services_Amazon_SNS_Common
             $method = 'HmacSHA1';
         }
 
+        $params['SignatureMethod']  = $method;
+        $params['SignatureVersion'] = 2;
+
+        ksort($params);
+
         $url  = new Net_URL2($this->getEndpoint());
         $data = 'GET' . "\n" . $url->getHost() . "\n" . '/' . "\n" . http_build_query($params);
 
         $signature = $hmac->hash($data, Crypt_HMAC2::BINARY);
 
-        $params['SignatureVersion'] = 2;
-        $params['SignatureMethod']  = $method;
+        // $params['SignatureVersion'] = 2;
+        // $params['SignatureMethod']  = $method;
 
         // Amazon wants the signature value base64-encoded
         $params['Signature'] = base64_encode($signature);
