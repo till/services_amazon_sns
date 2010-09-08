@@ -72,6 +72,7 @@ class AllTests
     {
         $suite = new PHPUnit_Framework_TestSuite('Services_Amazon_SNS TestSuite');
 
+        $suite->addTestSuite('BaseTestCase');
         $suite->addTestSuite('TopicTestCase');
         return $suite;
     }
