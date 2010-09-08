@@ -102,7 +102,7 @@ abstract class Services_Amazon_SNS_Common
         $params['Timestamp']        = gmdate('c');
         $params['AWSAccessKeyId']   = $this->accessKeyId;
 
-        $param       = $this->createSignature($params);
+        $params      = $this->createSignature($params);
         $queryString = http_build_query($params);
 
         return $this->getEndpoint() . '?' . $queryString;
@@ -135,18 +135,16 @@ abstract class Services_Amazon_SNS_Common
             $method = 'HmacSHA1';
         }
 
-        $params['SignatureVersion'] = 2;
-        $params['SignatureMethod']  = $method;
-
         $url  = new Net_URL2($this->getEndpoint());
         $data = 'GET' . "\n" . $url->getHost() . "\n" . '/' . "\n" . http_build_query($params);
 
         $signature = $hmac->hash($data, Crypt_HMAC2::BINARY);
 
+        $params['SignatureVersion'] = 2;
+        $params['SignatureMethod']  = $method;
+
         // Amazon wants the signature value base64-encoded
         $params['Signature'] = base64_encode($signature);
-
-        var_dump($params);
 
         return $params;
     }
