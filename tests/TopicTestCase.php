@@ -60,6 +60,8 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
      */
     protected $config;
 
+    protected $topicPrefix = 'SASNS_';
+
     public function setUp()
     {
         $configFile = dirname(__FILE__) . '/test-config.php';
@@ -82,38 +84,60 @@ class TopicTestCase extends PHPUnit_Framework_TestCase
 
     public function testCreate()
     {
+        $name = "{$this->topicPrefix}foo";
+
         $topics   = $this->instance->topics;
-        $topicArn = $topics->add('foo');
+        $topicArn = $topics->add($name);
         $this->assertNotEquals('', $topicArn);
-        $this->assertContains(":foo", $topicArn);
+        $this->assertContains(":{$name}", $topicArn);
         $this->assertContains($this->instance->getZone(), $topicArn);
     }
 
     public function testDelete()
     {
-        $topicArn = $this->instance->topics->add('foo');
+        $name = "{$this->topicPrefix}foo";
+
+        $topicArn = $this->instance->topics->add($name);
         $this->assertEquals(true, $this->instance->topics->delete($topicArn));
     }
 
+    /**
+     * This test might fail when SNS doesn't return the two topics yet.
+     *
+     * @return void
+     */
     public function testGet()
     {
-        $this->instance->topics->add('foo');
-        $this->instance->topics->add('bar');
+        $this->instance->topics->add("{$this->topicPrefix}foo");
+        $this->instance->topics->add("{$this->topicPrefix}bar");
 
         $topics = $this->instance->topics->get();
-        $this->assertEquals(2, count($topics));
+        $this->assertEquals(2, count($topics), "We were probably too fast. Re-run this test, please.");
 
         foreach ($topics as $topic) {
             $this->assertTrue($this->instance->topics->delete($topic));
         }
     }
 
+    /**
+     * A new topic should return this set of attributes.
+     *
+     * @return void
+     */
     public function testGetAttributes()
     {
-        $topicArn = $this->instance->topics->add('foobar');
+        $topicArn = $this->instance->topics->add("{$this->topicPrefix}foobar");
 
         $attributes = $this->instance->topics->getAttributes($topicArn);
-        var_dump($attributes);
+
+        $this->assertTrue(isset($attributes['Owner']));
+        $this->assertTrue(isset($attributes['SubscriptionsPending']));
+        $this->assertTrue(isset($attributes['Policy']));
+        $this->assertTrue(isset($attributes['SubscriptionsConfirmed']));
+        $this->assertTrue(isset($attributes['SubscriptionsDeleted']));
+        $this->assertTrue(isset($attributes['TopicArn']));
+
+        $this->assertEquals($topicArn, $attributes['TopicArn']);
 
         $this->instance->topics->delete($topicArn);
     }
