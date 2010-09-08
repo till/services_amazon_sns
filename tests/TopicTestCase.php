@@ -149,9 +149,27 @@ class TopicTestCase extends AbstractTestCase
         $this->instance->topics->delete($topicArn);
     }
 
+    public function testGetPermissions()
+    {
+        $topicArn = $this->instance->topics->add("{$this->topicPrefix}WADDAP");
+
+        $permissions = $this->instance->topics->getPermissions($topicArn);
+        $this->assertTrue(is_array($permissions));
+        $this->assertEquals(1, count($permissions));
+
+        $this->instance->topics->delete($topicArn);
+    }
+
+    /**
+     * Full flexed permission test.
+     *
+     * @return void
+     */
     public function testPermissions()
     {
         $this->fail('To be implemented.');
+
+        $topicArn = $this->instance->topics->add("{$this->topicPrefix}PERM");
 
         $label = 'ServicesAmazonSNSPermTest';
 
