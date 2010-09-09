@@ -172,20 +172,25 @@ class TopicTestCase extends AbstractTestCase
      */
     public function testPermissions()
     {
-        $this->fail('To be implemented.');
-
         $topicArn = $this->instance->topics->add("{$this->topicPrefix}PERM");
 
         $label = 'ServicesAmazonSNSPermTest';
 
-        $this->instance->getPermissions($topicArn);
-
-        $this->instance->addPermission(
+        $this->assertTrue($this->instance->topics->setPermissions(
             $topicArn,
             $label,
-            array('aws' => 'action', 'aws2' => 'action')
-        );
+            array('aws' => 'Subscribe', 'aws2' => 'SetTopicAttributes')
+        ));
 
-        $this->instance->deletePermission($topicArn, $label);
+        $permissions1 = $this->instance->topics->getPermissions($topicArn);
+        $this->assertEquals(2, count($permissions1));
+
+        $this->instance->topics->deletePermission($topicArn, $label);
+        $permissions2 = $this->instance->topics->getPermissions($topicArn);
+        $this->assertEquals(1, count($permissions2));
+
+        var_dump($permissions1, $permissions2);
+
+        $this->instance->topics->delete($topicArn);
     }
 }
