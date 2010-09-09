@@ -185,7 +185,11 @@ abstract class Services_Amazon_SNS_Common
      */
     protected function parseErrorResponse($body)
     {
-        $xml = new SimpleXMLElement($body);
+        $body = trim($body);
+        if ($body == '<UnknownOperationException/>') {
+            return 'Unknown Operation';
+        }
+        $xml  = new SimpleXMLElement($body);
         return sprintf(
             '%s: %s (%s)',
             (string) $xml->Error->Sender,
