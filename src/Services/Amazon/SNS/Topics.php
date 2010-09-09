@@ -87,29 +87,6 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
     }
 
     /**
-     * Give other AWS accounts permissions to add public, etc. to a topic.
-     *
-     * <code>
-     * http://sns.us-east-1.amazonaws.com/
-     * ?TopicArn=arn%3Aaws%3Asns%3Aus-east-1%3A123456789012%3AMy-Test
-     * &ActionName.member.1=Publish
-     * &ActionName.member.2=GetTopicAttributes
-     * &Label=NewPermission
-     * &AWSAccountId.member.1=987654321000
-     * &AWSAccountId.member.2=876543210000
-     * &Action=AddPermission
-     * &SignatureVersion=2
-     * &SignatureMethod=HmacSHA256
-     * &Timestamp=2010-03-31T12%3A00%3A00.000Z
-     * &AWSAccessKeyId=(AWS Access Key ID)
-     * &Signature=k%2FAU%2FKp13pjndwJ7rr1sZszy6MZMlOhRBCHx1ZaZFiw%3D
-     * </code>
-     */
-    public function addPermission()
-    {
-    }
-
-    /**
      * Delete a topic.
      *
      * @param string $arn The topic's ARN.
@@ -124,8 +101,26 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         return $this->parseResponse($response);
     }
 
-    public function deletePermission()
+    /**
+     * Delete a policy/permission (by label).
+     *
+     * @param string $arn   The topic's ARN.
+     * @param string $label The policy's label.
+     *
+     * @return boolean
+     */
+    public function deletePermission($arn, $label)
     {
+        $requestUrl = $this->createRequest(
+            array(
+                'TopicArn' => $arn,
+                'Label'    => $label,
+                'Action'   => 'RemovePermission'
+            )
+        );
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
     }
 
     /**
@@ -206,19 +201,68 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         return $this->parseResponse($response);
     }
 
-    public function setPermission()
+    /**
+     * Set permission on a topic. (SNS: AddPermission)
+     *
+     * <code>
+     * http://sns.us-east-1.amazonaws.com/
+     * ?TopicArn=arn%3Aaws%3Asns%3Aus-east-1%3A123456789012%3AMy-Test
+     * &ActionName.member.1=Publish
+     * &ActionName.member.2=GetTopicAttributes
+     * &Label=NewPermission
+     * &AWSAccountId.member.1=987654321000
+     * &AWSAccountId.member.2=876543210000
+     * &Action=AddPermission
+     * &SignatureVersion=2
+     * &SignatureMethod=HmacSHA256
+     * &Timestamp=2010-03-31T12%3A00%3A00.000Z
+     * &AWSAccessKeyId=(AWS Access Key ID)
+     * &Signature=k%2FAU%2FKp13pjndwJ7rr1sZszy6MZMlOhRBCHx1ZaZFiw%3D
+     * </code>
+     *
+     * @param string $arn
+     * @param string $label
+     * @param array  $data
+     *
+     * @return boolean
+     * @throws Services_Amazon_SNS_Excpetion When an action is invalid.
+     */
+    public function setPermissions($arn, $label, array $data)
     {
         static $actions = array(
-            "SNS:GetTopicAttributes",
-            "SNS:SetTopicAttributes",
-            "SNS:AddPermission",
-            "SNS:RemovePermission",
-            "SNS:DeleteTopic",
-            "SNS:Subscribe",
-            "SNS:ListSubscriptionsByTopic",
-            "SNS:Publish",
-            "SNS:Receive",
+            "GetTopicAttributes",
+            "SetTopicAttributes",
+            "AddPermission",
+            "RemovePermission",
+            "DeleteTopic",
+            "Subscribe",
+            "ListSubscriptionsByTopic",
+            "Publish",
+            "Receive",
         );
+
+        $params = array(
+            'TopicArn' => $arn,
+            'Label'    => $label,
+            'Action'   => 'AddPermission',
+        );
+
+        $i=1;
+        foreach ($data as $accessKeyId => $action) {
+
+            if (!in_array($action, $actions)) {
+                throw new Services_Amazon_SNS_Exception("Invalid argument: {$action}");
+            }
+
+            $params["AWSAccountId.member.{$i}"] = $accessKeyId;
+            $params["ActionName.member.{$i}"]   = $action;
+
+        }
+
+        $requestUrl = $this->createRequest($params);
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
     }
 
     /**
@@ -253,6 +297,12 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
                 $attributes[(string) $entry->key] = (string) $entry->value;
             }
             return $attributes;
+        }
+        if ($xml->getName() == 'AddPermissionResponse') {
+            return true;
+        }
+        if ($xml->getName() == 'RemovePermissionResponse') {
+            return true;
         }
         var_dump($xml, $xml->getName(), $xml->asXml());
         throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
