@@ -189,8 +189,6 @@ class TopicTestCase extends AbstractTestCase
         $permissions2 = $this->instance->topics->getPermissions($topicArn);
         $this->assertEquals(1, count($permissions2));
 
-        var_dump($permissions1, $permissions2);
-
-        $this->instance->topics->delete($topicArn);
+        $this->assertTrue($this->instance->topics->delete($topicArn));
     }
 }
