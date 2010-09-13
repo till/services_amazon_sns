@@ -103,11 +103,37 @@ abstract class Services_Amazon_SNS_Common
         $params['AWSAccessKeyId']   = $this->accessKeyId;
 
         $params      = $this->createSignature($params);
-        $queryString = http_build_query($params);
+        $queryString = $this->http_build_query2($params);
 
         return $this->getEndpoint() . '?' . $queryString;
     }
 
+    /**
+    * Implementation of http_build_query which complies with RFC 1738. SNS does not accept spaces encoded as +.
+    * Adapted from http://php.net/manual/en/function.http-build-query.php#90438
+    *
+    * @param array $data query parameters
+    *
+    * @return string
+    */
+    protected function http_build_query2($data) 
+    { 
+        $ret = array(); 
+        $sep = '';
+        foreach ((array)$data as $k => $v) { 
+            if (is_array($v) || is_object($v)) { 
+                array_push($ret, http_build_query($v, '', $sep, $k)); 
+            } else { 
+                array_push($ret, $k.'='.rawurlencode($v)); 
+            } 
+        } 
+        if (empty($sep)) {
+            $sep = ini_get('arg_separator.output'); 
+        }
+    
+        return implode($sep, $ret);
+    }
+        
     /**
      * Blatantly stolen/adapted from {@link Services_Amazon_EC2::signParameters()}.
      *
@@ -139,7 +165,7 @@ abstract class Services_Amazon_SNS_Common
         ksort($params);
 
         $url  = new Net_URL2($this->getEndpoint());
-        $data = 'GET' . "\n" . $url->getHost() . "\n" . '/' . "\n" . http_build_query($params);
+        $data = 'GET' . "\n" . $url->getHost() . "\n" . '/' . "\n" . $this->http_build_query2($params);
 
         $signature = $hmac->hash($data, Crypt_HMAC2::BINARY);
 

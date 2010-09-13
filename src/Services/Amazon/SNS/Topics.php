@@ -264,6 +264,28 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
 
         return $this->parseResponse($response);
     }
+    
+    /**
+    * Publish to topic.
+    *
+    * @param string $arn
+    * @param string $message 
+    * @param string $subject
+    *
+    * @return string message id
+    */
+    public function publish($arn, $message, $subject = '')
+    {
+        $params = array('Action' => 'Publish', 'TopicArn' => $arn, 'Message' => $message);
+        if (!empty($subject)) {
+            $params['Subject'] = $subject;
+        }
+
+        $requestUrl = $this->createRequest($params);
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
+    }
 
     /**
      * This is a parser for the successful response from the various actions.
@@ -303,6 +325,9 @@ class Services_Amazon_SNS_Topics extends Services_Amazon_SNS_Common
         }
         if ($xml->getName() == 'RemovePermissionResponse') {
             return true;
+        }
+        if (isset($xml->PublishResult)) {
+            return (string) $xml->PublishResult->MessageId;
         }
         var_dump($xml, $xml->getName(), $xml->asXml());
         throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");

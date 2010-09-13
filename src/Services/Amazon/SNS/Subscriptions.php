@@ -56,6 +56,159 @@
 class Services_Amazon_SNS_Subscriptions extends Services_Amazon_SNS_Common
 {
     protected $expectedErrorCodes = array(
-        500, 400, 403,
+        500, 400, 403
     );
+    
+    /**
+    * Create a subscription.
+    *
+    * @param string $arn      topic arn
+    * @param string $protocol
+    * @param string $endpoint
+    *
+    * @return string subscription's arn (can be 'pending confirmation' message)
+    */
+    public function subscribe($arn, $protocol, $endpoint)
+    {
+        static $protocols = array(
+            "http",
+            "https",
+            "email",
+            "email-json",
+            "sqs",
+        );
+
+        if (!in_array($protocol, $protocols)) {
+            throw new Services_Amazon_SNS_Exception("Invalid protocol: {$protocol}");
+        }
+
+        $requestUrl = $this->createRequest(
+            array(
+                'TopicArn' => $arn, 
+                'Protocol' => $protocol, 
+                'Endpoint' => $endpoint, 
+                'Action'   => 'Subscribe'
+            )
+        );
+        
+        $response = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
+    }
+    
+    /**
+    * Delete a subscription.
+    *
+    * @param string arn subscription arn
+    *
+    * @return boolean
+    */
+    public function unsubscribe($arn)
+    {
+        $requestUrl = $this->createRequest(array('SubscriptionArn' => $arn, 'Action' => 'Unsubscribe'));
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
+    }
+    
+    /**
+    * Confirm a subscription.
+    *
+    * @param string $arn           topic arn
+    * @param string $token
+    * @param string $authenticate 'true' if authentication on unsubscribe is requested
+    *
+    * @return string subscription's arn
+    */
+    public function confirm($arn, $token, $authenticate = '')
+    {
+        $requestParams = array('TopicArn' => $arn, 'Token' => $token);
+        if (!empty($authenticate)) {
+            if ($authenticate != 'true') {
+                throw new Services_Amazon_SNS_Exception("Invalid parameter: {$authenticate}");
+            }
+            
+            $requestParams['AuthenticateOnUnsubscribe'] = $authenticate;
+        }
+        
+        $requestUrl = $this->createRequest($requestParams);
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
+    }
+
+    /**
+    * Return list of subscriptions.
+    *
+    * @return array
+    */
+    public function get()
+    {
+        $requestUrl = $this->createRequest(array('Action' => 'ListSubscriptions'));
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
+    }
+    
+    /**
+    * Return list of subscriptions by topic.
+    *
+    * @param string $arn
+    *
+    * @return array
+    */
+    public function getByTopic($arn)
+    {
+        $requestUrl = $this->createRequest(array('Action' => 'ListSubscriptionsByTopic', 'TopicArn' => $arn));
+        $response   = $this->makeRequest($requestUrl);
+
+        return $this->parseResponse($response);
+    }
+
+    /**
+     * This is a parser for the successful response from the various actions.
+     *
+     * The chain is: {@link self::parseResponse()}, then here.
+     *
+     * @return mixed
+     * @throws Services_Amazon_SNS_Exception If we couldn't match anything.
+     */
+    protected function responseParser(SimpleXMLElement $xml)
+    {
+        if (isset($xml->SubscribeResult)) {
+            return (string) $xml->SubscribeResult->SubscriptionArn;
+        }
+        if ($xml->getName() == 'UnsubscribeResponse') {
+            return true;
+        }
+        if (isset($xml->ConfirmSubscriptionResult)) {
+            return (string) $xml->ConfirmSubscriptionResult->SubscriptionArn;
+        }
+        
+        $list = false;
+        if (isset($xml->ListSubscriptionsResult)) {
+            $list  = true;
+            $token = 'ListSubscriptionsResult';
+        }
+        if (isset($xml->ListSubscriptionsByTopicResult)) {
+            $list  = true;
+            $token = 'ListSubscriptionsByTopicResult';
+        }
+        if ($list) {
+            $subscriptions = array();
+            foreach ($xml->$token->Subscriptions->member as $member) {
+                $subscriptions[] = array(
+                    'topic' => (string) $member->TopicArn, 
+                    'subscription' => (string) $member->SubscriptionArn,
+                    'protocol' => (string) $member->Protocol,
+                    'owner' => (string) $member->Owner,
+                    'endpoint' => (string) $member->Endpoint
+                );
+            }
+            return $subscriptions;
+        }
+
+        var_dump($xml, $xml->getName(), $xml->asXml());
+        throw new Services_Amazon_SNS_Exception("Not yet implemented response parser.");
+    }
 }

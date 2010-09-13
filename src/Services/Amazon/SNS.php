@@ -182,6 +182,9 @@ class Services_Amazon_SNS
         case 'topics':
             return self::$subs[$var] = new Services_Amazon_SNS_Topics($this->accessKeyId, $this->secretAccessKey, $this->zone);
             break;
+        case 'subscriptions':
+            return self::$subs[$var] = new Services_Amazon_SNS_Subscriptions($this->accessKeyId, $this->secretAccessKey, $this->zone);
+            break;
         default:
             throw new Services_Amazon_SNS_Exception("Unknown: {$var}");
         }
